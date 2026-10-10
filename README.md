@@ -1,16 +1,138 @@
-# React + Vite
+# Francis Benedict Gaviola | Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal portfolio website built with React, Vite and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Light and dark theme toggle that remembers your choice
+- Responsive layout with a mobile hamburger menu
+- Sticky nav bar that highlights the section you are viewing
+- Highlights section with category filters and a details pop-up
+- Contact section with copy buttons and a message form that opens a prefilled email
+- Back-to-top button and fade-in animations on scroll (respects reduced motion)
 
-## React Compiler
+## Tech stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- Vite
+- Tailwind CSS v3 (with PostCSS and Autoprefixer)
 
-## Expanding the ESLint configuration
+## Run it locally
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+npm run dev
+```
+
+To make a production build:
+
+```bash
+npm run build
+```
+
+## Class diagram
+
+Components marked "new" were added in the second activity.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class App {
+        <<component>>
+        -dark boolean
+        -active string
+        +toggleTheme()
+        +syncTheme()
+    }
+    class Nav {
+        <<component>>
+        -open boolean
+        +props dark, toggle, active
+        +toggleMenu()
+    }
+    class Hero {
+        <<component>>
+        -photo string
+        +render()
+    }
+    class About {
+        <<component>>
+        -games string[]
+        -skills Skill[]
+        +render()
+    }
+    class Orgs {
+        <<component>>
+        -orgs Org[]
+        +render()
+    }
+    class Highlights {
+        <<component>>
+        -cat string
+        -selected Highlight
+        -list Highlight[]
+        +setCat(cat)
+        +openDetails(item)
+    }
+    class HighlightModal {
+        <<component, new>>
+        +props item, onClose
+        -ref dialog
+        +showModal()
+        +close()
+    }
+    class Contact {
+        <<component>>
+        -msg string
+        -name string
+        -note string
+        +copy(email)
+        +send(event)
+    }
+    class BackToTop {
+        <<component, new>>
+        -visible boolean
+        +onScroll()
+        +scrollToTop()
+    }
+    class Hooks {
+        <<hooks, new>>
+        +useActiveSection() string
+        +useReveal() ref, shown
+    }
+    class PortfolioData {
+        <<constants>>
+        PHOTO
+        EMAILS
+        LINKS
+        NAV_LINKS
+        SKILLS
+        ORGS
+        GAMES
+        HIGHLIGHTS
+        CATS
+    }
+
+    App *-- Nav
+    App *-- Hero
+    App *-- About
+    App *-- Orgs
+    App *-- Highlights
+    App *-- Contact
+    App *-- BackToTop
+    Highlights *-- HighlightModal
+
+    Nav ..> PortfolioData : uses
+    Hero ..> PortfolioData : uses
+    About ..> PortfolioData : uses
+    Orgs ..> PortfolioData : uses
+    Highlights ..> PortfolioData : uses
+    Contact ..> PortfolioData : uses
+
+    App ..> Hooks : useActiveSection
+    About ..> Hooks : useReveal
+    Orgs ..> Hooks : useReveal
+    Highlights ..> Hooks : useReveal
+    Contact ..> Hooks : useReveal
+```
