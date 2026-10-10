@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 
 // Put your photo in the "public" folder (for example public/photo.jpg), then set this to '/photo.jpg'
-const PHOTO = ''
+const PHOTO = 'public/photo.jpg'
 const EMAILS = ['gaviolabenedict@gmail.com', 'francisbenedict.gaviola@cit.edu']
 // Replace each link with your real profile address
 const LINKS = [
@@ -68,6 +68,57 @@ function useActiveSection(ids) {
     }
   }, [ids])
   return active
+}
+
+// Fade-and-rise animation when a section first scrolls into view (skipped if the visitor prefers reduced motion)
+function useReveal() {
+  const ref = useRef(null)
+  const [shown, setShown] = useState(
+    () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  )
+  useEffect(() => {
+    const el = ref.current
+    if (!el || shown) return
+    const io = new IntersectionObserver(
+      ([en]) => {
+        if (en.isIntersecting) {
+          setShown(true)
+          io.disconnect()
+        }
+      },
+      { threshold: 0.12 }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [shown])
+  return [ref, shown]
+}
+const reveal = (shown) =>
+  'transition-[opacity,transform] duration-700 ease-out ' + (shown ? 'opacity-100' : 'translate-y-6 opacity-0')
+
+// Floating button that appears after scrolling down
+function BackToTop() {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  return (
+    <button
+      className={
+        'fixed bottom-[max(20px,env(safe-area-inset-bottom))] right-5 z-10 grid h-12 w-12 cursor-pointer place-items-center rounded-full border-2 border-accent bg-accent text-[1.4rem] font-bold text-onaccent shadow-[0_4px_0_var(--line)] transition-opacity duration-200 ' +
+        (visible ? 'opacity-100' : 'pointer-events-none opacity-0')
+      }
+      onClick={() => window.scrollTo({ top: 0 })}
+      aria-label="Back to top"
+      aria-hidden={!visible}
+      tabIndex={visible ? 0 : -1}
+    >
+      <span aria-hidden="true">↑</span>
+    </button>
+  )
 }
 
 const BAR = 'block h-0.5 w-5 rounded-full bg-ink transition-transform duration-150'
@@ -171,8 +222,9 @@ function Hero() {
 }
 
 function About() {
+  const [ref, shown] = useReveal()
   return (
-    <section className={SECTION} id="about">
+    <section ref={ref} className={SECTION + ' ' + reveal(shown)} id="about">
       <h2 className={TITLE}>About me</h2>
       <div className="grid grid-cols-[1.4fr_1fr] gap-9 max-[760px]:grid-cols-1">
         <div>
@@ -203,8 +255,9 @@ function About() {
 }
 
 function Orgs() {
+  const [ref, shown] = useReveal()
   return (
-    <section className={SECTION} id="orgs">
+    <section ref={ref} className={SECTION + ' ' + reveal(shown)} id="orgs">
       <h2 className={TITLE}>Organizations</h2>
       <div className={GRID}>
         {ORGS.map((o) => (
@@ -269,11 +322,12 @@ function HighlightModal({ item, onClose }) {
 }
 
 function Highlights() {
+  const [ref, shown] = useReveal()
   const [cat, setCat] = useState('All')
   const [selected, setSelected] = useState(null)
   const list = HIGHLIGHTS.filter((p) => cat === 'All' || p.c === cat)
   return (
-    <section className={SECTION} id="highlights">
+    <section ref={ref} className={SECTION + ' ' + reveal(shown)} id="highlights">
       <h2 className={TITLE}>Highlights</h2>
       <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Filter highlights">
         {CATS.map((c) => (
@@ -313,6 +367,7 @@ const FIELD =
 const ACTION = 'cursor-pointer rounded-full border-2 border-onaccent px-[18px] py-1.5 font-bold'
 
 function Contact() {
+  const [ref, shown] = useReveal()
   const [msg, setMsg] = useState('')
   const [name, setName] = useState('')
   const [note, setNote] = useState('')
@@ -336,7 +391,7 @@ function Contact() {
     setMsg('Opening your email app…')
   }
   return (
-    <section className={SECTION} id="contact">
+    <section ref={ref} className={SECTION + ' ' + reveal(shown)} id="contact">
       <div className="grid grid-cols-[1.1fr_1fr] gap-7 rounded-[30px] bg-accent p-10 text-onaccent max-[760px]:grid-cols-1 max-[760px]:p-[26px]">
         <div>
           <h2 className="mb-2.5 font-display text-[clamp(1.6rem,4vw,2.3rem)] font-semibold">Let’s connect!</h2>
@@ -430,6 +485,7 @@ export default function App() {
         <Highlights />
         <Contact />
       </main>
+      <BackToTop />
       <footer className={WRAP + ' text-muted'}>© 2026 Francis Benedict B. Gaviola. Built with React and CSS.</footer>
     </>
   )
