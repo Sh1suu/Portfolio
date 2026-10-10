@@ -41,18 +41,37 @@ const BTN =
 const CARD = 'flex flex-col gap-2 rounded-[22px] border-2 p-[22px]'
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-[18px]'
 
+const BAR = 'block h-0.5 w-5 rounded-full bg-ink transition-transform duration-150'
+
 function Nav({ dark, toggle }) {
+  const [open, setOpen] = useState(false)
+
+  // Let Escape close the mobile menu
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   return (
     <header className={WRAP}>
       <nav className="flex flex-wrap items-center justify-between gap-4 py-[18px]" aria-label="Main">
         <a className="font-display text-[1.3rem] font-semibold no-underline" href="#top">Francis Benedict Gaviola</a>
-        <div className="flex flex-wrap items-center gap-5">
-          <ul className="m-0 flex list-none gap-5 p-0">
+        <div className="flex flex-wrap items-center gap-5 max-[760px]:contents">
+          <ul
+            id="nav-menu"
+            className={
+              'm-0 flex list-none gap-5 p-0 max-[760px]:order-4 max-[760px]:w-full max-[760px]:flex-col max-[760px]:gap-0 max-[760px]:rounded-[18px] max-[760px]:border-2 max-[760px]:border-line max-[760px]:bg-card max-[760px]:px-4 max-[760px]:py-2' +
+              (open ? '' : ' max-[760px]:hidden')
+            }
+          >
             {NAV_LINKS.map((x) => (
               <li key={x}>
                 <a
-                  className="font-semibold no-underline hover:underline hover:decoration-accent hover:underline-offset-[5px]"
+                  className="font-semibold no-underline hover:underline hover:decoration-accent hover:underline-offset-[5px] max-[760px]:block max-[760px]:py-2"
                   href={'#' + x.toLowerCase()}
+                  onClick={() => setOpen(false)}
                 >
                   {x}
                 </a>
@@ -60,11 +79,22 @@ function Nav({ dark, toggle }) {
             ))}
           </ul>
           <button
-            className="cursor-pointer rounded-full border-2 border-line bg-card px-3.5 py-[5px] font-semibold"
+            className="cursor-pointer rounded-full border-2 border-line bg-card px-3.5 py-[5px] font-semibold max-[760px]:order-2 max-[760px]:ml-auto"
             onClick={toggle}
             aria-pressed={dark}
           >
             {dark ? 'Light mode' : 'Dark mode'}
+          </button>
+          <button
+            className="hidden cursor-pointer flex-col gap-1 rounded-full border-2 border-line bg-card px-3 py-2.5 max-[760px]:order-3 max-[760px]:flex"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-controls="nav-menu"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+          >
+            <span aria-hidden="true" className={BAR + (open ? ' translate-y-1.5 rotate-45' : '')} />
+            <span aria-hidden="true" className={BAR + (open ? ' opacity-0' : '')} />
+            <span aria-hidden="true" className={BAR + (open ? ' -translate-y-1.5 -rotate-45' : '')} />
           </button>
         </div>
       </nav>
