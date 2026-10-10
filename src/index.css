@@ -22,7 +22,7 @@
     --onaccent: #1F1739; --soft: #3C2F6E; --line: #4B3C85; --pink: #5A3A68;
   }
   html {
-    scroll-padding-top: env(safe-area-inset-top, 0px);
+    scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 70px);
     scroll-behavior: smooth;
   }
   body {
