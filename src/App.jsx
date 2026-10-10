@@ -31,19 +31,70 @@ const HIGHLIGHTS = [
 const CATS = ['All', 'Esports', 'Robotics', 'Events']
 const NAV_LINKS = ['About', 'Orgs', 'Highlights', 'Contact']
 
+// Shared Tailwind class groups (kept as full strings so Tailwind can detect them)
+const WRAP = 'mx-auto max-w-[1040px] px-5'
+const SECTION = 'mx-auto max-w-[1040px] px-5 py-[52px]'
+const TITLE = 'mb-[22px] font-display text-[clamp(1.7rem,4.5vw,2.5rem)] font-semibold tracking-[-.01em]'
+const PILL = 'rounded-full border-2 border-line bg-card px-4 py-1.5 font-semibold'
+const BTN =
+  'inline-block cursor-pointer rounded-full border-2 border-accent px-6 py-[11px] font-bold no-underline transition-transform duration-[120ms] ease-[ease] hover:-translate-y-0.5'
+const CARD = 'flex flex-col gap-2 rounded-[22px] border-2 p-[22px]'
+const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-[18px]'
+
+const BAR = 'block h-0.5 w-5 rounded-full bg-ink transition-transform duration-150'
+
 function Nav({ dark, toggle }) {
+  const [open, setOpen] = useState(false)
+
+  // Let Escape close the mobile menu
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   return (
-    <header className="wrap">
-      <nav className="nav" aria-label="Main">
-        <a className="logo" href="#top">Francis Benedict Gaviola</a>
-        <div className="nav-r">
-          <ul>
+    <header className={WRAP}>
+      <nav className="flex flex-wrap items-center justify-between gap-4 py-[18px]" aria-label="Main">
+        <a className="font-display text-[1.3rem] font-semibold no-underline" href="#top">Francis Benedict Gaviola</a>
+        <div className="flex flex-wrap items-center gap-5 max-[760px]:contents">
+          <ul
+            id="nav-menu"
+            className={
+              'm-0 flex list-none gap-5 p-0 max-[760px]:order-4 max-[760px]:w-full max-[760px]:flex-col max-[760px]:gap-0 max-[760px]:rounded-[18px] max-[760px]:border-2 max-[760px]:border-line max-[760px]:bg-card max-[760px]:px-4 max-[760px]:py-2' +
+              (open ? '' : ' max-[760px]:hidden')
+            }
+          >
             {NAV_LINKS.map((x) => (
-              <li key={x}><a href={'#' + x.toLowerCase()}>{x}</a></li>
+              <li key={x}>
+                <a
+                  className="font-semibold no-underline hover:underline hover:decoration-accent hover:underline-offset-[5px] max-[760px]:block max-[760px]:py-2"
+                  href={'#' + x.toLowerCase()}
+                  onClick={() => setOpen(false)}
+                >
+                  {x}
+                </a>
+              </li>
             ))}
           </ul>
-          <button className="theme" onClick={toggle} aria-pressed={dark}>
+          <button
+            className="cursor-pointer rounded-full border-2 border-line bg-card px-3.5 py-[5px] font-semibold max-[760px]:order-2 max-[760px]:ml-auto"
+            onClick={toggle}
+            aria-pressed={dark}
+          >
             {dark ? 'Light mode' : 'Dark mode'}
+          </button>
+          <button
+            className="hidden cursor-pointer flex-col gap-1 rounded-full border-2 border-line bg-card px-3 py-2.5 max-[760px]:order-3 max-[760px]:flex"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-controls="nav-menu"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+          >
+            <span aria-hidden="true" className={BAR + (open ? ' translate-y-1.5 rotate-45' : '')} />
+            <span aria-hidden="true" className={BAR + (open ? ' opacity-0' : '')} />
+            <span aria-hidden="true" className={BAR + (open ? ' -translate-y-1.5 -rotate-45' : '')} />
           </button>
         </div>
       </nav>
@@ -53,29 +104,37 @@ function Nav({ dark, toggle }) {
 
 function Hero() {
   return (
-    <section className="hero wrap" id="top">
+    <section
+      className="mx-auto grid max-w-[1040px] grid-cols-[1.2fr_.8fr] items-center gap-10 px-5 pb-16 pt-9 max-[760px]:grid-cols-1 max-[760px]:pt-4"
+      id="top"
+    >
       <div>
-        <h1>Hi, I’m Francis!</h1>
-        <p className="role">President, Wildcats Esports League • CIT-U</p>
-        <p className="intro">
+        <h1 className="mb-2 font-display text-[clamp(2.4rem,7vw,4.6rem)] font-semibold leading-[1.02] tracking-[-.02em]">
+          Hi, I’m Francis!
+        </h1>
+        <p className="mb-4 text-[1.1rem] font-bold text-accent">President, Wildcats Esports League • CIT-U</p>
+        <p className="mb-[26px] max-w-[48ch] text-muted">
           I’m a friendly, outgoing 3rd-year student at Cebu Institute of Technology - University.
           I love bringing people together, whether it’s for a game, a robot, or a big event.
         </p>
-        <div className="cta">
-          <a className="btn fill" href="#highlights">See what I’ve done</a>
-          <a className="btn" href="#contact">Say hi</a>
+        <div className="flex flex-wrap gap-3">
+          <a className={BTN + ' bg-accent text-onaccent'} href="#highlights">See what I’ve done</a>
+          <a className={BTN + ' bg-transparent'} href="#contact">Say hi</a>
         </div>
       </div>
-      <div className="photo">
-        <div className="arch">
+      <div className="relative w-[min(100%,340px)] justify-self-center">
+        <div className="grid aspect-[4/5] place-items-center overflow-hidden rounded-[999px_999px_28px_28px] border-[3px] border-accent bg-arch p-6 text-center">
           {PHOTO ? (
-            <img src={PHOTO} alt="Francis Benedict Gaviola" />
+            <img className="-m-6 block h-full w-full object-cover" src={PHOTO} alt="Francis Benedict Gaviola" />
           ) : (
-            <div><b>FG</b><span>Your photo goes here</span></div>
+            <div>
+              <b className="block font-display text-[4rem] leading-none text-accent">FG</b>
+              <span className="text-[.95rem] font-semibold text-muted">Your photo goes here</span>
+            </div>
           )}
         </div>
-        <span className="badge b1">Esports</span>
-        <span className="badge b2">Robotics</span>
+        <span className="absolute -left-3.5 bottom-[22%] rounded-full border-2 border-line bg-card px-3.5 py-1.5 text-[.9rem] font-bold shadow-[0_4px_0_var(--line)] max-[760px]:left-0">Esports</span>
+        <span className="absolute -right-2.5 bottom-[6%] rounded-full border-2 border-line bg-card px-3.5 py-1.5 text-[.9rem] font-bold shadow-[0_4px_0_var(--line)] max-[760px]:right-0">Robotics</span>
       </div>
     </section>
   )
@@ -83,26 +142,29 @@ function Hero() {
 
 function About() {
   return (
-    <section className="wrap s" id="about">
-      <h2 className="title">About me</h2>
-      <div className="about">
+    <section className={SECTION} id="about">
+      <h2 className={TITLE}>About me</h2>
+      <div className="grid grid-cols-[1.4fr_1fr] gap-9 max-[760px]:grid-cols-1">
         <div>
-          <p>
+          <p className="mb-3.5 max-w-[56ch]">
             I’m Francis Benedict B. Gaviola, but most people call me Sh1su online. I’m the kind of
             person who thrives around people, and I’m happiest when I’m helping a group do something
             great together.
           </p>
-          <p>
+          <p className="mb-3.5 max-w-[56ch]">
             I’m involved in many organizations, and I enjoy leading teams and organizing events. I
             love games, and I play and help run tournaments in:
           </p>
-          <div className="games">
-            {GAMES.map((g) => <span className="game" key={g}>{g}</span>)}
+          <div className="mt-1.5 flex flex-wrap gap-2.5">
+            {GAMES.map((g) => <span className={PILL} key={g}>{g}</span>)}
           </div>
         </div>
-        <div className="skills">
+        <div className="grid content-start gap-3">
           {SKILLS.map(([name, desc]) => (
-            <div className="skill" key={name}><b>{name}</b><span>{desc}</span></div>
+            <div className="rounded-[18px] border-2 border-line bg-card px-[18px] py-3.5" key={name}>
+              <b className="block font-display text-[1.1rem] font-medium">{name}</b>
+              <span className="text-[.95rem] text-muted">{desc}</span>
+            </div>
           ))}
         </div>
       </div>
@@ -112,13 +174,13 @@ function About() {
 
 function Orgs() {
   return (
-    <section className="wrap s" id="orgs">
-      <h2 className="title">Organizations</h2>
-      <div className="grid">
+    <section className={SECTION} id="orgs">
+      <h2 className={TITLE}>Organizations</h2>
+      <div className={GRID}>
         {ORGS.map((o) => (
-          <article className={'card' + (o.main ? ' main' : '')} key={o.t}>
-            <h3>{o.t}</h3>
-            <p>{o.d}</p>
+          <article className={CARD + (o.main ? ' border-accent bg-card-main' : ' border-line bg-card')} key={o.t}>
+            <h3 className="font-display text-[1.25rem] font-medium leading-tight">{o.t}</h3>
+            <p className="text-[.98rem] text-muted">{o.d}</p>
           </article>
         ))}
       </div>
@@ -130,19 +192,26 @@ function Highlights() {
   const [cat, setCat] = useState('All')
   const list = HIGHLIGHTS.filter((p) => cat === 'All' || p.c === cat)
   return (
-    <section className="wrap s" id="highlights">
-      <h2 className="title">Highlights</h2>
-      <div className="chips" role="group" aria-label="Filter highlights">
+    <section className={SECTION} id="highlights">
+      <h2 className={TITLE}>Highlights</h2>
+      <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Filter highlights">
         {CATS.map((c) => (
-          <button key={c} aria-pressed={c === cat} onClick={() => setCat(c)}>{c}</button>
+          <button
+            className={PILL + ' cursor-pointer aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-onaccent'}
+            key={c}
+            aria-pressed={c === cat}
+            onClick={() => setCat(c)}
+          >
+            {c}
+          </button>
         ))}
       </div>
-      <div className="grid">
+      <div className={GRID}>
         {list.map((p) => (
-          <article className="card" key={p.t}>
-            <span className="tag">{p.c}</span>
-            <h3>{p.t}</h3>
-            <p>{p.d}</p>
+          <article className={CARD + ' border-line bg-card'} key={p.t}>
+            <span className="self-start rounded-full bg-soft px-3 py-0.5 text-[.85rem] font-bold">{p.c}</span>
+            <h3 className="font-display text-[1.25rem] font-medium leading-tight">{p.t}</h3>
+            <p className="text-[.98rem] text-muted">{p.d}</p>
           </article>
         ))}
       </div>
@@ -163,22 +232,35 @@ function Contact() {
     }
   }
   return (
-    <section className="wrap s" id="contact">
-      <div className="contact">
+    <section className={SECTION} id="contact">
+      <div className="grid grid-cols-[1.1fr_1fr] gap-7 rounded-[30px] bg-accent p-10 text-onaccent max-[760px]:grid-cols-1 max-[760px]:p-[26px]">
         <div>
-          <h2>Let’s connect!</h2>
-          <p>Want to collaborate on an event, a tournament, or a project? Message me.</p>
-          <div className="mail">
+          <h2 className="mb-2.5 font-display text-[clamp(1.6rem,4vw,2.3rem)] font-semibold">Let’s connect!</h2>
+          <p className="mb-1.5">Want to collaborate on an event, a tournament, or a project? Message me.</p>
+          <div className="mt-2.5 grid gap-2 font-bold">
             {EMAILS.map((e) => (
-              <a key={e} href={'mailto:' + e} style={{ color: 'inherit' }}>{e}</a>
+              <a className="break-all underline" key={e} href={'mailto:' + e}>{e}</a>
             ))}
           </div>
-          <button className="copy" onClick={copy}>Copy my email</button>
-          <span className="msg" role="status">{msg}</span>
+          <button
+            className="mt-3 cursor-pointer rounded-full border-2 border-onaccent bg-transparent px-[18px] py-1.5 font-bold text-onaccent"
+            onClick={copy}
+          >
+            Copy my email
+          </button>
+          <span className="mt-2 block text-[.95rem]" role="status">{msg}</span>
         </div>
-        <div className="links">
+        <div className="flex flex-wrap content-start gap-2.5">
           {LINKS.map(([name, url]) => (
-            <a key={name} href={url} target="_blank" rel="noopener noreferrer">{name}</a>
+            <a
+              className="rounded-full bg-onaccent px-[18px] py-2 font-bold text-accent no-underline hover:-translate-y-0.5 dark:bg-[#1F1739] dark:text-[#B79CFF]"
+              key={name}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {name}
+            </a>
           ))}
         </div>
       </div>
@@ -210,7 +292,7 @@ export default function App() {
         <Highlights />
         <Contact />
       </main>
-      <footer className="wrap">© 2026 Francis Benedict B. Gaviola. Built with React and CSS.</footer>
+      <footer className={WRAP + ' text-muted'}>© 2026 Francis Benedict B. Gaviola. Built with React and CSS.</footer>
     </>
   )
 }
