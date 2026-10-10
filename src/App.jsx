@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // Put your photo in the "public" folder (for example public/photo.jpg), then set this to '/photo.jpg'
 const PHOTO = ''
@@ -23,10 +23,10 @@ const ORGS = [
 ]
 const GAMES = ['Valorant', 'Mobile Legends', 'Call of Duty: Mobile', 'Dota', 'Honor of Kings']
 const HIGHLIGHTS = [
-  { t: 'The Summer Invitational', c: 'Esports', d: 'I organized this interschool tournament, bringing teams from different schools together.' },
-  { t: 'Imaginators Convention', c: 'Events', d: 'One of the student organizers who helped make the convention happen.' },
-  { t: 'CESAFI robotics competition', c: 'Robotics', d: 'I competed in the CESAFI robotics competition.' },
-  { t: 'Founded a robotics organization', c: 'Robotics', d: 'I started the robotics organization at my previous school, University of Cebu.' },
+  { t: 'The Summer Invitational', c: 'Esports', role: 'Organizer', d: 'I organized this interschool tournament, bringing teams from different schools together.' },
+  { t: 'Imaginators Convention', c: 'Events', role: 'Student organizer', d: 'One of the student organizers who helped make the convention happen.' },
+  { t: 'CESAFI robotics competition', c: 'Robotics', role: 'Competitor', d: 'I competed in the CESAFI robotics competition.' },
+  { t: 'Founded a robotics organization', c: 'Robotics', role: 'Founder', d: 'I started the robotics organization at my previous school, University of Cebu.' },
 ]
 const CATS = ['All', 'Esports', 'Robotics', 'Events']
 const NAV_LINKS = ['About', 'Orgs', 'Highlights', 'Contact']
@@ -84,7 +84,7 @@ function Nav({ dark, toggle, active }) {
   }, [open])
 
   return (
-        <header className="sticky top-0 z-20 bg-bg">
+    <header className="sticky top-0 z-20 bg-bg">
       <nav className={WRAP + ' flex flex-wrap items-center justify-between gap-4 py-[18px]'} aria-label="Main">
         <a className="font-display text-[1.3rem] font-semibold no-underline" href="#top">Francis Benedict Gaviola</a>
         <div className="flex flex-wrap items-center gap-5 max-[760px]:contents">
@@ -218,8 +218,59 @@ function Orgs() {
   )
 }
 
+// Pop-up with more details about one highlight. Add a photos: ['/photo1.jpg'] list to an item to show pictures.
+function HighlightModal({ item, onClose }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const dialog = ref.current
+    if (!dialog.open) dialog.showModal()
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+  return (
+    <dialog
+      ref={ref}
+      className="m-auto max-h-[85vh] w-[min(92vw,560px)] overflow-auto rounded-[22px] border-2 border-accent bg-card p-0 text-ink backdrop:bg-black/50"
+      aria-labelledby="highlight-title"
+      onClose={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) e.currentTarget.close()
+      }}
+    >
+      <div className="flex flex-col gap-3 p-6">
+        <span className="self-start rounded-full bg-soft px-3 py-0.5 text-[.85rem] font-bold">{item.c}</span>
+        <h3 id="highlight-title" className="font-display text-[1.6rem] font-medium leading-tight">{item.t}</h3>
+        <p className="font-bold text-accent">My role: {item.role}</p>
+        <p className="text-muted">{item.d}</p>
+        {item.photos && item.photos.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2.5">
+            {item.photos.map((src, i) => (
+              <img
+                className="aspect-[4/3] w-full rounded-[14px] object-cover"
+                key={src}
+                src={src}
+                alt={item.t + ' photo ' + (i + 1)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid h-36 place-items-center rounded-[18px] border-2 border-dashed border-line bg-soft text-muted">
+            Photos coming soon
+          </div>
+        )}
+        <button className={BTN + ' self-start bg-accent text-onaccent'} onClick={() => ref.current.close()}>
+          Close
+        </button>
+      </div>
+    </dialog>
+  )
+}
+
 function Highlights() {
   const [cat, setCat] = useState('All')
+  const [selected, setSelected] = useState(null)
   const list = HIGHLIGHTS.filter((p) => cat === 'All' || p.c === cat)
   return (
     <section className={SECTION} id="highlights">
@@ -242,9 +293,17 @@ function Highlights() {
             <span className="self-start rounded-full bg-soft px-3 py-0.5 text-[.85rem] font-bold">{p.c}</span>
             <h3 className="font-display text-[1.25rem] font-medium leading-tight">{p.t}</h3>
             <p className="text-[.98rem] text-muted">{p.d}</p>
+            <button
+              className="mt-auto cursor-pointer self-start rounded-full border-2 border-accent bg-transparent px-4 py-1 text-[.9rem] font-bold transition-transform duration-[120ms] ease-[ease] hover:-translate-y-0.5"
+              onClick={() => setSelected(p)}
+              aria-haspopup="dialog"
+            >
+              View details
+            </button>
           </article>
         ))}
       </div>
+      {selected && <HighlightModal item={selected} onClose={() => setSelected(null)} />}
     </section>
   )
 }
