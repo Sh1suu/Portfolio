@@ -41,9 +41,38 @@ const BTN =
 const CARD = 'flex flex-col gap-2 rounded-[22px] border-2 p-[22px]'
 const GRID = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-[18px]'
 
+const SECTION_IDS = ['top', ...NAV_LINKS.map((x) => x.toLowerCase())]
+
+// Tells which section is in the middle of the screen, so the nav can highlight it
+function useActiveSection(ids) {
+  const [active, setActive] = useState('')
+  useEffect(() => {
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean)
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((en) => {
+          if (en.isIntersecting) setActive(en.target.id === 'top' ? '' : en.target.id)
+        })
+      },
+      { rootMargin: '-40% 0px -55% 0px' }
+    )
+    els.forEach((el) => io.observe(el))
+    // The last section may never reach the middle band, so handle the very bottom of the page
+    const onScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) setActive('contact')
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      io.disconnect()
+      window.removeEventListener('scroll', onScroll)
+    }
+  }, [ids])
+  return active
+}
+
 const BAR = 'block h-0.5 w-5 rounded-full bg-ink transition-transform duration-150'
 
-function Nav({ dark, toggle }) {
+function Nav({ dark, toggle, active }) {
   const [open, setOpen] = useState(false)
 
   // Let Escape close the mobile menu
@@ -55,8 +84,8 @@ function Nav({ dark, toggle }) {
   }, [open])
 
   return (
-    <header className={WRAP}>
-      <nav className="flex flex-wrap items-center justify-between gap-4 py-[18px]" aria-label="Main">
+        <header className="sticky top-0 z-20 bg-bg">
+      <nav className={WRAP + ' flex flex-wrap items-center justify-between gap-4 py-[18px]'} aria-label="Main">
         <a className="font-display text-[1.3rem] font-semibold no-underline" href="#top">Francis Benedict Gaviola</a>
         <div className="flex flex-wrap items-center gap-5 max-[760px]:contents">
           <ul
@@ -69,8 +98,9 @@ function Nav({ dark, toggle }) {
             {NAV_LINKS.map((x) => (
               <li key={x}>
                 <a
-                  className="font-semibold no-underline hover:underline hover:decoration-accent hover:underline-offset-[5px] max-[760px]:block max-[760px]:py-2"
+                  className="font-semibold no-underline hover:underline hover:decoration-accent hover:underline-offset-[5px] aria-[current=location]:text-accent aria-[current=location]:underline aria-[current=location]:decoration-accent aria-[current=location]:underline-offset-[5px] max-[760px]:block max-[760px]:py-2"
                   href={'#' + x.toLowerCase()}
+                  aria-current={active === x.toLowerCase() ? 'location' : undefined}
                   onClick={() => setOpen(false)}
                 >
                   {x}
@@ -219,17 +249,32 @@ function Highlights() {
   )
 }
 
+const FIELD =
+  'w-full rounded-[14px] border-2 border-onaccent bg-transparent px-3.5 py-2 text-onaccent placeholder:opacity-70 focus-visible:outline-onaccent'
+const ACTION = 'cursor-pointer rounded-full border-2 border-onaccent px-[18px] py-1.5 font-bold'
+
 function Contact() {
   const [msg, setMsg] = useState('')
-  const copy = () => {
+  const [name, setName] = useState('')
+  const [note, setNote] = useState('')
+  const copy = (email) => {
     try {
-      navigator.clipboard.writeText(EMAILS[0]).then(
-        () => setMsg('Email copied.'),
+      navigator.clipboard.writeText(email).then(
+        () => setMsg('Copied ' + email),
         () => setMsg('Copy failed. Please copy it by hand.')
       )
     } catch (e) {
       setMsg('Copy failed. Please copy it by hand.')
     }
+  }
+  // Opens the visitor's email app with the message prefilled (nothing is sent from this site)
+  const send = (e) => {
+    e.preventDefault()
+    const subject = 'Portfolio message from ' + name.trim()
+    const body = note.trim() + '\n\n' + name.trim()
+    window.location.href =
+      'mailto:' + EMAILS[0] + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body)
+    setMsg('Opening your email app…')
   }
   return (
     <section className={SECTION} id="contact">
@@ -239,15 +284,47 @@ function Contact() {
           <p className="mb-1.5">Want to collaborate on an event, a tournament, or a project? Message me.</p>
           <div className="mt-2.5 grid gap-2 font-bold">
             {EMAILS.map((e) => (
-              <a className="break-all underline" key={e} href={'mailto:' + e}>{e}</a>
+              <div className="flex flex-wrap items-center gap-3" key={e}>
+                <a className="break-all underline" href={'mailto:' + e}>{e}</a>
+                <button
+                  className={ACTION + ' bg-transparent py-0.5 text-[.9rem] text-onaccent focus-visible:outline-onaccent'}
+                  onClick={() => copy(e)}
+                  aria-label={'Copy ' + e}
+                >
+                  Copy
+                </button>
+              </div>
             ))}
           </div>
-          <button
-            className="mt-3 cursor-pointer rounded-full border-2 border-onaccent bg-transparent px-[18px] py-1.5 font-bold text-onaccent"
-            onClick={copy}
-          >
-            Copy my email
-          </button>
+          <form className="mt-5 grid gap-3" onSubmit={send}>
+            <label className="grid gap-1 font-bold">
+              Your name
+              <input
+                className={FIELD + ' font-normal'}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Juan Dela Cruz"
+                required
+              />
+            </label>
+            <label className="grid gap-1 font-bold">
+              Message
+              <textarea
+                className={FIELD + ' min-h-28 resize-y font-normal'}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Tell me about your event, tournament, or project"
+                required
+              />
+            </label>
+            <button
+              className={ACTION + ' justify-self-start bg-onaccent text-accent focus-visible:outline-onaccent'}
+              type="submit"
+            >
+              Message me
+            </button>
+          </form>
           <span className="mt-2 block text-[.95rem]" role="status">{msg}</span>
         </div>
         <div className="flex flex-wrap content-start gap-2.5">
@@ -282,9 +359,11 @@ export default function App() {
     try { localStorage.setItem('theme', dark ? 'dark' : 'light') } catch (e) {}
   }, [dark])
 
+  const active = useActiveSection(SECTION_IDS)
+
   return (
     <>
-      <Nav dark={dark} toggle={() => setDark(!dark)} />
+      <Nav dark={dark} toggle={() => setDark(!dark)} active={active} />
       <main>
         <Hero />
         <About />
